@@ -1,51 +1,64 @@
 <template>
-	<div class="flex w-screen h-screen text-gray-700">
-		<div class="flex flex-col flex-shritng-0 w-64 border-r border-gray-300 bg-gray-100">
-			<!-- sidebar -->
-			<div class="h-0 overflow-auto flex-grow">
-				<div class="mt-4">
-					<div class="flex items-center justify-between h-8 text-sm pl-8 pr-3 ml-2">
-						<button @click="this.activeNote = {}">All notes</button>
-						<button 
-							class="text-center border border-gray-500 pl-3 pr-3 mr-2"
-							@click="newNote"
-						>
-							+
-						</button>
-					</div>
-					<a v-for="note in notes" :key="note.created" @click.prevent="openNote(note)"
-						class="flex items-center h-8 text-sm pl-8 pr-3" href="#">
-						<span class="ml-2 leading-none">{{ new Date(note.created).toLocaleString() }}</span>
-					</a>
-				</div>
-			</div>
-		</div>
+  <div class="flex w-screen h-screen text-gray-700">
+    <div class="flex flex-col flex-shritng-0 w-64 border-r border-gray-300 bg-gray-100">
+      <!-- sidebar -->
+      <div class="h-0 overflow-auto flex-grow">
+        <div class="mt-4">
+          <div class="flex items-center justify-between h-8 text-sm pl-8 pr-3 ml-2">
+            <button @click="activeNote = {}">
+              All notes
+            </button>
+            <button 
+              class="text-center border border-gray-500 pl-3 pr-3 mr-2"
+              @click="newNote"
+            >
+              +
+            </button>
+          </div>
+          <a
+            v-for="note in notes"
+            :key="note.created"
+            class="flex items-center h-8 text-sm pl-8 pr-3"
+            href="#"
+            @click.prevent="openNote(note)"
+          >
+            <span class="ml-2 leading-none">{{ new Date(note.created).toLocaleString() }}</span>
+          </a>
+        </div>
+      </div>
+    </div>
 
-		<div
-			class="flex flex-col flex-grow"
-			v-if="Object.keys(activeNote).length"
-		>
-			<!-- main content -->
-			<div class="flex flex-col flex-grow overflow-auto">
-				<editor-content :editor="editor" />
-			</div>
-			<div class="flex justify-end items-center h-16 bg-gray-100 border-t border-gray-300 text-right px-8">
-				<button class="border border-gray-500 py-2 px-6 rounded hover:bg-white" @click="saveNote">
-					Save Note
-				</button>
-			</div>
-		</div>
-		<div 
-			class="prose flex flex-col flex-grow"
-			v-else
-		>
-			<div v-for="note in notes" :key="note.created">
-				<h1>{{ note.created }}</h1>
-				<div v-html="note.content"></div>
-				<hr>
-			</div>
-		</div>
-	</div>
+    <div
+      v-if="Object.keys(activeNote).length"
+      class="flex flex-col flex-grow"
+    >
+      <!-- main content -->
+      <div class="flex flex-col flex-grow overflow-auto">
+        <editor-content :editor="editor" />
+      </div>
+      <div class="flex justify-end items-center h-16 bg-gray-100 border-t border-gray-300 text-right px-8">
+        <button
+          class="border border-gray-500 py-2 px-6 rounded hover:bg-white"
+          @click="saveNote"
+        >
+          Save Note
+        </button>
+      </div>
+    </div>
+    <div 
+      v-else
+      class="prose flex flex-col flex-grow"
+    >
+      <div
+        v-for="note in notes"
+        :key="note.created"
+      >
+        <h1>{{ note.created }}</h1>
+        <div v-html="note.content" />
+        <hr>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
