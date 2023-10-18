@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
     <div class="flex flex-col flex-grow">
         <div class="flex flex-col flex-grow overflow-auto">
             <editor-content :editor="editor" />
@@ -18,27 +18,30 @@
             EditorContent
         },
         mounted() {
-            let editor = new Editor({
-                content: '',
-                extensions: [
-                    StarterKit
-                ],
-                editorProps: {
-                    attributes: {
-                        class: "prose my-6 mx-auto focus:online-none"
-                    }
-                }
-            })
-
-            this.$store.commit('updateEditor', editor);
+            // let editore = new Editor({
+            //     content: '',
+            //     extensions: [
+            //         StarterKit
+            //     ],
+            //     editorProps: {
+            //         attributes: {
+            //             class: "prose my-6 mx-auto focus:online-none"
+            //         }
+            //     }
+            // })
+        
+            // this.$store.commit('updateEditor', editore);
         },
         computed: {
             editor() {
                 return this.$store.state.editor;
+            },
+            activeNote() {
+                return this.$store.state.activeNote;
             }
         },
         beforeUnmount() {
             this.editor.destroy()
         },
 }
-</script> -->
+</script>

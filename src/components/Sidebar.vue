@@ -19,11 +19,30 @@
 </template>
 
 <script>
+import StarterKit from '@tiptap/starter-kit';
+import { Editor } from '@tiptap/vue-3';
+    
 export default {
     methods: {
         openNote(note) {
+            console.log(note)
             this.$store.commit('updateActiveNote', note);
+
+            let editore = new Editor({
+                content: note.content,
+                extensions: [
+                    StarterKit
+                ],
+                editorProps: {
+                    attributes: {
+                        class: "prose my-6 mx-auto focus:online-none"
+                    }
+                }
+            })
+        
+            this.$store.commit('updateEditor', editore);
             this.$store.state.editor.commands.setContent(note.content);
+        
         },
 
         showAllNotes() {
@@ -37,7 +56,12 @@ export default {
     computed: {
         notes() {
             return this.$store.state.notes
+        },
+        activeNote() {
+            return this.$store.state.activeNote;
         }
-    }
+    },
+
+
 }
 </script>

@@ -1,4 +1,4 @@
-<!-- <template>
+<template>
     <div class="prose flex flex-col flex-grow m-auto overflow-y-auto h-full">
         <div v-for="note in notes" :key="note.created">
             <p>{{ note.created }}</p>
@@ -16,4 +16,4 @@
             }
         }
     }
-</script> -->
+</script>

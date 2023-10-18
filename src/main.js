@@ -4,6 +4,7 @@ import './app.css';
 import './registerServiceWorker'
 
 import { createStore } from 'vuex';
+import { Editor } from "@tiptap/vue-3";
 
 const store = createStore({
     state() {
@@ -32,87 +33,100 @@ const store = createStore({
         }
     },
     actions: {
-        init({ dispatch }) {
-            dispatch('initDatabase');
-            dispatch('initNotes');
+        async init({ dispatch }) {
+            await dispatch('initDatabase');
+            await dispatch('initNotes');
         },
-
-        initDatabase({commit}) {
-            // DB Initialization
-            let db = window.indexedDB.open('notes')
-
-            db.onerror = e => {
-                console.log(e.target.result, "Error opening database")
-            };
-
-            db.onsuccess = e => {
-                console.log(e.target)
-                commit('updateDatabase', e.target.result);
-            }
-
-            db.onupgradeneeded = e => {
-                e.target.result.deleteObjectStore('notes');
-                e.target.result.createObjectStore('notes', { keyPath: "created" });
-            }
-        },
-
-        initNotes({commit, state}) {    
-            // Notes initialization
-            state.database.transaction('notes')
-                .objectStore('notes')
-                .getAll()
-                .onsuccess = e => {
-                    commit('updateNotes', e.target.result)
-                };
-        },
-        saveNote({commit, state}) {
-            let noteStore = state.database.transaction('notes', 'readwrite')
-            .objectStore('notes');
         
-            let noteRequest = noteStore.get(state.activeNote.created);
+        async initDatabase({ commit }) {
+            return new Promise((resolve, reject) => {
+                let db = window.indexedDB.open('notes');
+        
+                db.onerror = (e) => {
+                    console.log(e.target.result, "Error opening database");
+                    reject(e.target.result);
+                };
+        
+                db.onsuccess = (e) => {
+                    commit('updateDatabase', e.target.result);
+                    resolve(e.target.result);
+                };
+        
+                db.onupgradeneeded = (e) => {
+                    e.target.result.deleteObjectStore('notes');
+                    e.target.result.createObjectStore('notes', { keyPath: "created" });
+                };
+            });
+        },
 
-            noteRequest.onerror = e => {
-                reject('Error saving the note in the database', e.target.result)
-            }
-            
-            noteRequest.onsuccess = e => {
-                let note = e.target.result;
-                note.content = state.editor.getHTML();
+        async initNotes({ commit, state }) {
+            if (state.database) { // Check if state.database is defined
+                // Notes initialization
+                const transaction = state.database.transaction('notes', 'readwrite');
+                const noteStore = transaction.objectStore('notes');
 
-                let updateRequest = noteStore.put(note);
+                const notes = await new Promise((resolve) => {
+                    const request = noteStore.getAll();
+                    request.onsuccess = (e) => {
+                        resolve(e.target.result);
+                    };
+                });
 
-                updateRequest.onerror = e => {
-                    reject('Error storing the updated note in the database', e.target.result)
-                }
-
-                updateRequest.onsuccess = e => {
-                    let noteIndex = state.notes.findIndex(n => n.created === note.created);
-                    state.notes[noteIndex] = note;
-                    commit('updateNotes', e.target.result);
-                }
+                commit('updateNotes', notes);
+            } else {
+                console.error("Database not initialized. Make sure initDatabase is called before initNotes.");
             }
         },
-        addNewNote({commit, state}) {
-            let transaction = state.database.transaction('notes', 'readwrite');
+        
+        async saveNote({ commit, state }) {
+            const noteStore = state.database.transaction('notes', 'readwrite').objectStore('notes');
+            const noteRequest = noteStore.get(state.activeNote.created);
 
-            transaction.oncomplete = e => {
-                resolve(e.target.result);
-            }
+            await new Promise((resolve, reject) => {
+                noteRequest.onerror = (e) => {
+                    reject('Error saving the note in the database', e.target.result);
+                };
+                
+                noteRequest.onsuccess = (e) => {
+                    const note = e.target.result;
+                    note.content = state.editor.getHTML();
 
-            let date = new Date();
-            let note = {
+                    const updateRequest = noteStore.put(note);
+
+                    updateRequest.onerror = (e) => {
+                        reject('Error storing the updated note in the database', e.target.result);
+                    }
+
+                    updateRequest.onsuccess = (e) => {
+                        const noteIndex = state.notes.findIndex(n => n.created === note.created);
+                        state.notes[noteIndex] = note;
+                        commit('updateNotes', state.notes);
+                        resolve(e.target.result);
+                    }
+                }
+            });
+        },
+        
+        async addNewNote({ commit, state }) {
+            const transaction = state.database.transaction('notes', 'readwrite');
+            const noteStore = transaction.objectStore('notes');
+
+            const date = new Date();
+            const note = {
                 created: date.getTime(),
                 content: ''
             }
 
-            let notes = state.notes.unshift(note);
+            const request = noteStore.add(note);
 
-            console.log(notes);
-
-            commit('updateNotes', notes);
-            commit('updateActiveNote', note);
-
-            transaction.objectStore('notes').add(note);
+            await new Promise((resolve) => {
+                request.onsuccess = (e) => {
+                    const notes = [note, ...state.notes];
+                    commit('updateNotes', notes);
+                    commit('updateActiveNote', note);
+                    resolve(e.target.result);
+                };
+            });
         }
     }
 });
